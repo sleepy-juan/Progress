@@ -69,11 +69,11 @@ class Projects extends Component {
             <Segment.Group style={{margin: "300px", marginTop: "100px"}}>
                 {
                     this.state.projects.map((project, i) => {
-                        var members = project.members.filter(member => member !== "juan");
+                        var members = project.members.filter(member => member !== this.props.username);
                         members = members.map(member => '@'+member);
                         var members_str = 'with ';
                         if(members.length === 0){
-                            members_str = null;
+                            members_str = 'You alone';
                         }
                         else if(members.length === 1){
                             members_str += members[0];
