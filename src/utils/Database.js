@@ -57,3 +57,5 @@ export default class DatabaseClass{
 }
 
 export var DB = new DatabaseClass(process.env.REACT_APP_JSON_ENDPOINT);
+export var UserDB = DB.get("users");
+export var ProjectDB = DB.get("projects");
