@@ -44,13 +44,15 @@ class Projects extends Component {
         var percentage = 0;
         options.forEach(option => {
             var suboptions = option.suboptions;
-            var quntum_percentage = 100 / length / suboptions.length;
-
-            suboptions.forEach(suboption => {
-                if(suboption.done){
-                    percentage += quntum_percentage;
-                }
-            });
+            if(suboptions){
+                var quntum_percentage = 100 / length / suboptions.length;
+    
+                suboptions.forEach(suboption => {
+                    if(suboption.done){
+                        percentage += quntum_percentage;
+                    }
+                });
+            }
         });
 
         return percentage.toFixed(2);
@@ -84,7 +86,13 @@ class Projects extends Component {
                         }
 
                         return (
+                            this.props.username === this.props.showname && this.props.username ?
                             <Segment key={i} onClick={() => {window.location = '/projects/' + project.id}} style={{cursor: "pointer"}}>
+                                <Header>{project.title}</Header>
+                                <Progress percent={this._calculatePercentage(project)} indicating style={{marginTop: "20px", marginBottom: "20px"}}/>
+                                {members_str ? <p align='right'>{members_str}</p> : null}
+                            </Segment> : 
+                            <Segment key={i}>
                                 <Header>{project.title}</Header>
                                 <Progress percent={this._calculatePercentage(project)} indicating style={{marginTop: "20px", marginBottom: "20px"}}/>
                                 {members_str ? <p align='right'>{members_str}</p> : null}

@@ -1,4 +1,12 @@
 /*
+import {ProjectDB, UserDB} from './Database';
+
+UserDB.clearJSON();
+ProjectDB.clearJSON();
+localStorage.setItem("auth", null);
+*/
+
+/*
 import { ProjectDB } from "./Database";
 
 ProjectDB.putJSON([

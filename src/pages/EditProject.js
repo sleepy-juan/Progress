@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import WebHeader from '../components/Header';
 import { ProjectDB } from '../utils/Database';
 import { Message, Header, Progress, Divider, Segment, Container, Button, Modal, Input, Icon } from 'semantic-ui-react';
+import Calendar from 'react-calendar';
 
 class EditProjects extends Component {
     state = {
@@ -26,6 +27,7 @@ class EditProjects extends Component {
     }
 
     _subOption(suboptions, option_id){
+        suboptions = suboptions || [];
         return (
             <div>
                 <Divider />
@@ -75,6 +77,20 @@ class EditProjects extends Component {
                         })}</p>
                     })
                 }
+                {this._clickableText('Add', ()=>{
+                    suboptions.push({
+                        title: "Name the suboption",
+                        done: false,
+                    });
+                    ProjectDB.get(this.state.id).get('options').get(option_id).get('suboptions').putJSON(suboptions)
+                    .then(() => {
+                        var project = this.state.project;
+                        project.options[option_id].suboptions = suboptions;
+                        this.setState({
+                            project
+                        })
+                    })
+                })}
             </div>
         )
     }
@@ -122,13 +138,15 @@ class EditProjects extends Component {
         var percentage = 0;
         options.forEach(option => {
             var suboptions = option.suboptions;
-            var quntum_percentage = 100 / length / suboptions.length;
-
-            suboptions.forEach(suboption => {
-                if(suboption.done){
-                    percentage += quntum_percentage;
-                }
-            });
+            if(suboptions){
+                var quntum_percentage = 100 / length / suboptions.length;
+    
+                suboptions.forEach(suboption => {
+                    if(suboption.done){
+                        percentage += quntum_percentage;
+                    }
+                });
+            }
         });
 
         return percentage.toFixed(2);
@@ -191,6 +209,44 @@ class EditProjects extends Component {
         }
     }
 
+    onAddClicked(){
+        var options = this.state.project.options || [];
+        console.log(options)
+        options.push({
+            title: "Name the Option",
+            due: "When is due?",
+            suboptions: [
+
+            ]
+        });
+
+        ProjectDB.get(this.state.id).get('options').putJSON(options)
+        .then(() => {
+            var project = this.state.project;
+            project.options = options;
+            this.setState({
+                project
+            })
+        })
+    }
+
+    _onCalendarChanged(date){
+        ProjectDB.get(this.state.id).get('options').get(this.state.calendar_option).get('due').putJSON(date)
+        .then(() => {
+            var project = this.state.project;
+            project.options[this.state.calendar_option].due = date;
+            this.setState({
+                calendar: false,
+                project
+            });
+        });
+    }
+
+    _dateToString(date){
+        date = new Date(date)
+        return date.getMonth()+1 + "/" + date.getDate();
+    }
+
     render() {
         return (
             <div>
@@ -216,6 +272,17 @@ class EditProjects extends Component {
                         </Button>
                     </Modal.Actions>
                 </Modal>
+                <Modal
+                    basic
+                    open={this.state.calendar}
+                    closeOnEscape={true}
+                    closeOnDimmerClick={true}
+                    onClose={()=>this.setState({calendar: false})}
+                >
+                    <Modal.Content>
+                        <Calendar onChange={this._onCalendarChanged.bind(this)} />
+                    </Modal.Content>
+                </Modal>
                 {this.state.project ? 
                     <div style={{margin: "300px", marginTop: "100px"}}>
                         <Header>
@@ -238,7 +305,7 @@ class EditProjects extends Component {
                                 });
                             })}</Header.Subheader>
                         </Header>
-                        <Progress percent={this._calculatePercentage(this.state.project)} indicating style={{marginTop: "20px", marginBottom: "20px"}}/>
+                        <Progress progress percent={this._calculatePercentage(this.state.project)} indicating style={{marginTop: "20px", marginBottom: "20px"}}/>
                         <p align='right'>{this._getFormattedMembers(this.state.project.owner, this.state.project.members)}{this._clickableText(", edit")}</p>
 
                         <div style={{marginTop: "50px"}}>
@@ -263,7 +330,12 @@ class EditProjects extends Component {
                                                     }
                                                 });
                                             })}</Header>
-                                            <p>Due: {option.due}{this._clickableText(", edit")}</p>
+                                            <p>Due: {this._dateToString(option.due)}{this._clickableText(", edit", ()=>{
+                                                this.setState({
+                                                    calendar: true,
+                                                    calendar_option: i
+                                                })
+                                            })}</p>
                                             { this.state.expand[i] ? this._subOption(option.suboptions, i) : null }
                                         </Segment>
                                     )
@@ -271,7 +343,7 @@ class EditProjects extends Component {
                             }
                             <Segment basic style={{padding: "30px"}}>
                                 <Container textAlign='center'>
-                                    <Button circular icon="add" size='massive'/>
+                                    <Button onClick={this.onAddClicked.bind(this)} circular icon="add" size='massive'/>
                                 </Container>
                             </Segment>
                         </div>
