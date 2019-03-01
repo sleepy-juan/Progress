@@ -9,29 +9,38 @@ class Projects extends Component {
 
     componentWillMount(){
         if(this.props.showname){
-            ProjectDB.getJSON([])
+            ProjectDB.get('projects').getJSON([])
             .then(projects => {
                 if(projects){
                     projects = projects.filter(project => this.props.showname && project.owner === this.props.showname);
                     this.setState({projects});
                 }
-            });
+            })
         }
     }
     
     _onAdd(){
-        ProjectDB.getJSON([])
-        .then(projects => {
-            ProjectDB.get(projects.length).putJSON({
-                id: projects.length,
-                owner: this.props.showname,
-                title: "Name the Project",
-                percentage: 0,
-                members: [this.props.showname],
-                description: "Explain your project"
-            })
-            .then(res => {
-                window.location = '/projects/' + projects.length;
+        ProjectDB.getJSON({})
+        .then(projects_meta => {
+            var max_id = projects_meta.max_id;
+            if(max_id === undefined) max_id = -1;
+            var projects = projects_meta.projects || [];
+
+            ProjectDB.putJSON({
+                max_id: max_id+1,
+                projects: [
+                    ...projects,
+                    {
+                        id: max_id+1,
+                        owner: this.props.showname,
+                        title: "Name the Project",
+                        percentage: 0,
+                        members: [this.props.showname],
+                        description: "Explain your project"
+                    }
+                ]
+            }).then(() => {
+                window.location = '/projects/' + (max_id+1);
             });
         });
     }
@@ -55,7 +64,7 @@ class Projects extends Component {
             }
         });
 
-        return percentage.toFixed(2);
+        return parseInt(percentage.toFixed(2));
     }
 
     render() {
@@ -85,16 +94,24 @@ class Projects extends Component {
                             members_str += members[0] + ', ' + members[1] + ' and ' + (members.length - 2) + ' other(s)';
                         }
 
+                        var percentage = this._calculatePercentage(project);
+
                         return (
                             this.props.username === this.props.showname && this.props.username ?
                             <Segment key={i} onClick={() => {window.location = '/projects/' + project.id}} style={{cursor: "pointer"}}>
-                                <Header>{project.title}</Header>
-                                <Progress percent={this._calculatePercentage(project)} indicating style={{marginTop: "20px", marginBottom: "20px"}}/>
+                                {
+                                    percentage === 100 ?
+                                    <Header>(Completed) <del>{project.title}</del></Header> : <Header>{project.title}</Header>
+                                }
+                                <Progress percent={percentage} indicating style={{marginTop: "20px", marginBottom: "20px"}}/>
                                 {members_str ? <p align='right'>{members_str}</p> : null}
                             </Segment> : 
                             <Segment key={i}>
-                                <Header>{project.title}</Header>
-                                <Progress percent={this._calculatePercentage(project)} indicating style={{marginTop: "20px", marginBottom: "20px"}}/>
+                                {
+                                    percentage === 100 ?
+                                    <Header>(Completed) <del>{project.title}</del></Header> : <Header>{project.title}</Header>
+                                }
+                                <Progress percent={percentage} indicating style={{marginTop: "20px", marginBottom: "20px"}}/>
                                 {members_str ? <p align='right'>{members_str}</p> : null}
                             </Segment>
                         )

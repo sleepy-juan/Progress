@@ -16,12 +16,12 @@ class EditProjects extends Component {
 
     componentWillMount(){
         if(this.props.match.params.id){
-            ProjectDB.get(this.props.match.params.id).getJSON(null)
+            ProjectDB.get('projects').get(this.props.match.params.id).getJSON(null)
             .then(project => {
                 this.setState({
                     project,
                     id: this.props.match.params.id
-                });
+                })
             });
         }
     }
@@ -45,7 +45,7 @@ class EditProjects extends Component {
                                     }
                                 });
                             })}{this._clickableText(', undo', () => {
-                                ProjectDB.get(this.state.id).get('options').get(option_id).get('suboptions').get(i).get('done').putJSON(false)
+                                ProjectDB.get('projects').get(this.state.id).get('options').get(option_id).get('suboptions').get(i).get('done').putJSON(false)
                                 .then(()=>{
                                     var project = this.state.project;
                                     project.options[option_id].suboptions[i].done = false;
@@ -66,7 +66,7 @@ class EditProjects extends Component {
                                 }
                             });
                         })}{this._clickableText(', do', () => {
-                            ProjectDB.get(this.state.id).get('options').get(option_id).get('suboptions').get(i).get('done').putJSON(true)
+                            ProjectDB.get('projects').get(this.state.id).get('options').get(option_id).get('suboptions').get(i).get('done').putJSON(true)
                             .then(()=>{
                                 var project = this.state.project;
                                 project.options[option_id].suboptions[i].done = true;
@@ -82,7 +82,7 @@ class EditProjects extends Component {
                         title: "Name the suboption",
                         done: false,
                     });
-                    ProjectDB.get(this.state.id).get('options').get(option_id).get('suboptions').putJSON(suboptions)
+                    ProjectDB.get('projects').get(this.state.id).get('options').get(option_id).get('suboptions').putJSON(suboptions)
                     .then(() => {
                         var project = this.state.project;
                         project.options[option_id].suboptions = suboptions;
@@ -116,10 +116,10 @@ class EditProjects extends Component {
         return members_str;
     }
 
-    _clickableText(text, what){
+    _clickableText(text, what, color){
         return (
             <i 
-                style={{cursor:"pointer", color:'blue'}} 
+                style={{cursor:"pointer", color:color || 'blue'}} 
                 onClick={e => {
                     if(what) what();
                     e.stopPropagation();
@@ -149,14 +149,14 @@ class EditProjects extends Component {
             }
         });
 
-        return percentage.toFixed(2);
+        return parseInt(percentage.toFixed(2));
     }
 
     _onModalClicked(modal_title, option_id, suboption_id){
         if(this.modal_text && this.modal_text.length > 0){
             switch(modal_title){
             case "Project Name":
-                ProjectDB.get(this.state.id).get('title').putJSON(this.modal_text)
+                ProjectDB.get('projects').get(this.state.id).get('title').putJSON(this.modal_text)
                 .then(()=>{
                     var project = this.state.project;
                     project.title = this.modal_text;
@@ -168,7 +168,7 @@ class EditProjects extends Component {
             break;
 
             case "Description":
-                ProjectDB.get(this.state.id).get('description').putJSON(this.modal_text)
+                ProjectDB.get('projects').get(this.state.id).get('description').putJSON(this.modal_text)
                 .then(()=>{
                     var project = this.state.project;
                     project.description = this.modal_text;
@@ -180,7 +180,7 @@ class EditProjects extends Component {
             break;
 
             case "Option Name":
-                ProjectDB.get(this.state.id).get('options').get(option_id).get('title').putJSON(this.modal_text)
+                ProjectDB.get('projects').get(this.state.id).get('options').get(option_id).get('title').putJSON(this.modal_text)
                 .then(()=>{
                     var project = this.state.project;
                     project.options[option_id].title = this.modal_text;
@@ -192,7 +192,7 @@ class EditProjects extends Component {
             break;
 
             case "Suboption Name":
-            ProjectDB.get(this.state.id).get('options').get(option_id).get('suboptions').get(suboption_id).get('title').putJSON(this.modal_text)
+            ProjectDB.get('projects').get(this.state.id).get('options').get(option_id).get('suboptions').get(suboption_id).get('title').putJSON(this.modal_text)
                 .then(()=>{
                     var project = this.state.project;
                     project.options[option_id].suboptions[suboption_id].title = this.modal_text;
@@ -220,7 +220,7 @@ class EditProjects extends Component {
             ]
         });
 
-        ProjectDB.get(this.state.id).get('options').putJSON(options)
+        ProjectDB.get('projects').get(this.state.id).get('options').putJSON(options)
         .then(() => {
             var project = this.state.project;
             project.options = options;
@@ -231,7 +231,7 @@ class EditProjects extends Component {
     }
 
     _onCalendarChanged(date){
-        ProjectDB.get(this.state.id).get('options').get(this.state.calendar_option).get('due').putJSON(date)
+        ProjectDB.get('projects').get(this.state.id).get('options').get(this.state.calendar_option).get('due').putJSON(date)
         .then(() => {
             var project = this.state.project;
             project.options[this.state.calendar_option].due = date;
@@ -245,6 +245,25 @@ class EditProjects extends Component {
     _dateToString(date){
         date = new Date(date)
         return date.getMonth()+1 + "/" + date.getDate();
+    }
+
+    _onDeleteClicked(title, index, subindex){
+        switch(title){
+        case "Project Name":
+        
+        break;
+
+        case "Option Name":
+        
+        break;
+
+        case "Suboption Name":
+        
+        break;
+
+        default:
+        break;
+        }
     }
 
     render() {
@@ -264,11 +283,11 @@ class EditProjects extends Component {
                     }} fluid placeholder={this.state.modal.placeholder} />
                     </Modal.Content>
                     <Modal.Actions>
-                        <Button color='red' onClick={()=>this.setState({modal_open: false})}>
-                            <Icon name='remove' /> Cancel
-                        </Button>
                         <Button color='green' onClick={()=>this._onModalClicked(this.state.modal.title, this.state.modal.index, this.state.modal.subindex)}>
-                            <Icon name='checkmark' /> Change
+                            <Icon name='check' /> Change
+                        </Button>
+                        <Button color='red' onClick={()=>this._onDeleteClicked(this.state.modal.title, this.state.modal.index, this.state.modal.subindex)}>
+                            <Icon name='remove' /> Delete
                         </Button>
                     </Modal.Actions>
                 </Modal>
@@ -336,7 +355,7 @@ class EditProjects extends Component {
                                                     calendar_option: i
                                                 })
                                             })}</p>
-                                            { this.state.expand[i] ? this._subOption(option.suboptions, i) : null }
+                                            { !this.state.expand[i] ? this._subOption(option.suboptions, i) : null }
                                         </Segment>
                                     )
                                 }) : null
